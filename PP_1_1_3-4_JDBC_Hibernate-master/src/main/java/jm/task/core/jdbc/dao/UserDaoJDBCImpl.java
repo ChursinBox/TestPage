@@ -16,6 +16,11 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
     }
 
     public void createUsersTable() {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         try (PreparedStatement statement = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `katadb`.`kata` (\n" +
                 "  `id` INT NOT NULL AUTO_INCREMENT,\n" +
                 "  `name` VARCHAR(45) NOT NULL,\n" +
@@ -23,42 +28,89 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
                 "  `age` INT NOT NULL,\n" +
                 "  PRIMARY KEY (`id`));")) {
 
-            statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             e.printStackTrace();
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void dropUsersTable() {
+        try {
+            connection.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
         try (PreparedStatement statement = connection.prepareStatement("DROP TABLE IF EXISTS kata")) {
-
-            statement.executeUpdate();
+            connection.commit();
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "INSERT INTO kata(name, lastname, age) VALUES (?, ?, ?)")) {
-
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO kata(name, lastname, age) VALUES (?, ?, ?)")) {
+            connection.setAutoCommit(false);
             statement.setString(1, name);
             statement.setString(2, lastName);
             statement.setByte(3, age);
-            statement.executeUpdate();
+            connection.commit();
+
             System.out.println("User с именем " + name + " добавлен в базу данных");
         } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
             throw new RuntimeException(e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     public void removeUserById(long id) {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM kata WHERE id=?")) {
-
-            statement.setLong(1, id);
-            statement.executeUpdate();
+        try {
+            connection.setAutoCommit(false);
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM kata WHERE id=?")) {
+            statement.setLong(1, id);
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -86,11 +138,26 @@ public class UserDaoJDBCImpl extends Util implements UserDao {
     }
 
     public void cleanUsersTable() {
-        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM kata")) {
-
-            statement.executeUpdate();
+        try {
+            connection.setAutoCommit(false);
         } catch (SQLException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM kata")) {
+            connection.commit();
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }
