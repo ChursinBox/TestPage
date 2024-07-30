@@ -16,8 +16,6 @@ import java.util.Properties;
 
 public class Util {
     private static SessionFactory sessionFactory;
-    private static Session session;
-    private static Transaction transaction;
 
     public static SessionFactory getSessionFactory() {
         if (sessionFactory == null) {
@@ -51,19 +49,10 @@ public class Util {
         }
         return sessionFactory;
     }
-
-    public static Session getSession() {
-        return getSessionFactory().openSession();
+    public static void shutdown() {
+        sessionFactory.close();
     }
 
-    public static Transaction openTransaction() {
-        return getSession().beginTransaction();
-    }
-
-    public void closeTransactionSession() {
-        transaction.commit();
-        session.close();
-    }
 
 
 
